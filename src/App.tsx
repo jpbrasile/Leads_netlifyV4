@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from './lib/supabaseClient';
 import './App.css';
+import { runSmartQuery } from './services/smartQueryService';
 
 interface Entreprise {
   entreprise_id: number;
@@ -67,10 +68,27 @@ interface Email {
   prospect_nom?: string; // For UI display
 }
 
+
+
+
+
+
+
 function App() {
+// Add a new activeTab state option
   const [activeTab, setActiveTab] = useState<
-  'entreprises' | 'prospects' | 'historique_appels' | 'historique_meetings' | 'taches' | 'emails'
->('entreprises');
+    'entreprises' | 'prospects' | 'historique_appels' | 'historique_meetings' | 'taches' | 'emails' | 'smart_query'
+  >('entreprises');
+
+  const [smartQueryInput, setSmartQueryInput] = useState("");
+  const [smartQueryResult, setSmartQueryResult] = useState<{
+    sql: string;
+    validation: [boolean, string];
+    queryResults: any;
+    summary: string;
+  } | null>(null);
+  const [loadingSmartQuery, setLoadingSmartQuery] = useState(false);
+  //const handleRunSmartQuery = async () => { /* ... */ };
 
   // State for "entreprises" table
   const [entreprises, setEntreprises] = useState<Entreprise[]>([]);
@@ -183,6 +201,28 @@ function App() {
     notes: '',
   });
   const [editingTaches, setEditingTaches] = useState<string | null>(null);
+
+  const handleRunSmartQuery = async () => {
+    if (!smartQueryInput.trim()) {
+      alert("Please enter a query.");
+      return;
+    }
+    setLoadingSmartQuery(true);
+  
+    try {
+      // Call your smart query service function. This function 
+      // should perform the chain: generateSQL → validateSQLInSupabase → executeQuery → generateSummary.
+      const result = await runSmartQuery(smartQueryInput);
+      // Expected result: { sql, validation: [isValid, validationMsg], queryResults, summary }
+      setSmartQueryResult(result);
+    } catch (err: any) {
+      console.error("Error executing smart query:", err);
+      alert("Error executing smart query: " + err.message);
+    } finally {
+      setLoadingSmartQuery(false);
+    }
+  };
+
 
   // Fetch data when active tab changes
   useEffect(() => {
@@ -319,6 +359,11 @@ function App() {
   return (
     <div className="max-w-6xl mx-auto px-6 py-8">
       <div className="flex space-x-4 mb-6">
+        <button onClick={() => setActiveTab('smart_query')} 
+        className={activeTab === 'smart_query' ? "bg-blue-600 text-white px-4 py-2 rounded-lg" : "bg-gray-300 text-gray-900 px-4 py-2 rounded-lg"}>
+          Smart Query
+        </button>
+
         <button
           onClick={() => setActiveTab('entreprises')}
           className={`px-4 py-2 rounded-lg focus:outline-none ${
@@ -371,6 +416,47 @@ function App() {
           Tâches
         </button>
       </div>
+
+
+
+
+      {activeTab === 'smart_query' && (
+        <div>
+          <h1 className="text-3xl font-bold mb-6">Smart Query</h1>
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Enter your natural language query"
+              className="p-3 border border-gray-300 rounded-md w-full"
+              value={smartQueryInput}
+              onChange={(e) => setSmartQueryInput(e.target.value)}
+            />
+          </div>
+          <button
+            onClick={handleRunSmartQuery}
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+            disabled={loadingSmartQuery}
+          >
+            {loadingSmartQuery ? "Running Query..." : "Run Query"}
+          </button>
+          {smartQueryResult && (
+            <div className="mt-6">
+              <p><strong>Generated SQL:</strong> {smartQueryResult.sql}</p>
+              <p>
+                <strong>Validation:</strong> {smartQueryResult.validation[0] ? "SQL is valid" : `Error: ${smartQueryResult.validation[1]}`}
+              </p>
+              <p><strong>Query Results:</strong> {JSON.stringify(smartQueryResult.queryResults)}</p>
+              {smartQueryResult.summary && (<p><strong>Summary:</strong> {smartQueryResult.summary}</p>)}
+            </div>
+          )}
+        </div>
+      )}
+
+
+
+
+
+
 
       {activeTab === 'entreprises' && (
         <div>

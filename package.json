@@ -1,6 +1,19 @@
 {
   "name": "vite-react-supabase-tailwind",
   "version": "1.0.0",
+  "description": "This is a frontend application built with React and TypeScript, using Vite as the build tool and Tailwind CSS for styling.",
+  "homepage": "https://github.com/jpbrasile/Leads_netlifyV4#readme",
+  "bugs": {
+    "url": "https://github.com/jpbrasile/Leads_netlifyV4/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jpbrasile/Leads_netlifyV4.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "tailwind.config.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
